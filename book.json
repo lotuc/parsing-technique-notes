@@ -1,4 +1,7 @@
 {
     "title": "Parsing Technique Notes",
-    "author": "lotuc"
+    "author": "lotuc",
+    "plugins": [
+        "mathjax"
+    ]
 }
