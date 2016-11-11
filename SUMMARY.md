@@ -4,5 +4,6 @@
 * [语法作为生成装置](./chap2/index.md)
   * [语言](./chap2/language.md)
   * [语法](./chap2/grammars.md)
-  * [FORMAL GRAMMARS](./chap2/formal-grammars.md)
+  * [形式语法](./chap2/formal-grammars.md)
+  * [语法和语言的 CHOMSKY 级别](./chap2/chomsky-hierarchy.md)
 * [引用](./reference/index.md)

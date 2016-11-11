@@ -39,3 +39,11 @@ List       & \to & \text{Name | List，Name} \\
 ，Name End & \to & \text{and Name}
 \end{matrix} $$
 
+---
+
+生成规则是形式语言一个主要属性，它：
+
+1. 可用于重写部分句式
+2. 包含一个起始符号（start symbol）—— 所有句式的妈
+3. 包含终结符和非终结符
+4. 完成的句子（finished sentence）只包含终结符
