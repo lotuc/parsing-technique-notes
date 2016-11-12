@@ -8,7 +8,7 @@
 
 对于 *Type 0* 的语法来说，可以将任意数量（非零）的符号转换为任意数量（可能为零）的符号：
 
-> $$ ，N E \to \text{and N} $$
+> $$ \begin{smallmatrix} ，N E \to \text{and N} \end{smallmatrix} $$
 
 我们对这一点做出限制形成 *Type 1* 语法。它有两种定义方式，是等价的。
 
@@ -20,7 +20,7 @@ __定义2:*Type 1 context-sensitive（上下文相关）*__
 
 语法的所有的规则都是*上下文相关（context-sensitive）*的。一个规则是上下文相关的是指左侧只有一个非终结符号被其它符号替换了，其它符号（所谓上下文，即其前后的符号序列）保持顺序不变的移动到右侧。例如：
 
-> $$ \text{Name Comma Name End} \to \text{Name and Name End} $$
+> $$ \begin{smallmatrix} \text{Name Comma Name End} \to \text{Name and Name End} \end{smallmatrix} $$
 
 
 Type 1 语言的一个例子是包含相同数量的a、b、c的序列，它们顺序如下：
@@ -74,3 +74,64 @@ sentence_S & : & \text{name; list, and symbol, name.} \\
 list       & : & \text{name, comma symbol, list; name.}
 \end{smallmatrix} $$
 </center>
+
+你可以将其中的符号分别读作：
+
+- : &nbsp;&nbsp;&nbsp;&nbsp; “被定义为一个”
+- ; &nbsp;&nbsp;&nbsp;&nbsp; “，或一个”
+- , &nbsp;&nbsp;&nbsp;&nbsp; “后面跟着一个”
+- . &nbsp;&nbsp;&nbsp;&nbsp; “，除了这些再无其他了”
+
+这样上面的第二个规则就可以读作：
+
+> sentence 被定义为一个 name，或一个 list 后面跟着一个 “and symbol” 后面跟着一个 “name”，除了这些再无其他了。
+
+
+## 扩展的 CF 语法（extended context-free grammar, ECF grammar）
+
+常常会通过给常用的生成方式引入特殊的记法让 CF 语法变得更为简洁和易读；这些记法的引入并不会增强 CF 语法的表现力，所有包含引入的记法的规则都可以被转换成普通的 CF 规则。比如考虑规则：
+
+<center>
+$$ \begin{smallmatrix}
+something & \to & \text{something | something otherthing}
+\end{smallmatrix} $$
+</center>
+
+这种规则经常会出现，在 *ECF 语法* 中，会使用 $$ \begin{smallmatrix} something^+ \end{smallmatrix} $$ 代表“一或多个 something”。*ECF 语法* 中引入的最常见的记号：
+
+- $$ \begin{smallmatrix} something^+ \end{smallmatrix} $$ ： 表示“一或多个 *something*”。
+- $$ \begin{smallmatrix} something^* \end{smallmatrix} $$ ： 表示“零或多个 *something*”。
+- $$ \begin{smallmatrix} something^? \end{smallmatrix} $$ ： 表示“零或一个 *something*”。
+
+看看这些符号所做的事，我们可以称它们为*重复运算符*，包含这些运算符的表达式不妨称之为*正则表达式（regular expression）*。好吧，人人都见过正则表达式了吧。规则右侧包含正则表达式的语法——ECF——因此有时也被称作 *右侧是正则表达式的语法（regular right part grammar，RRP grammar）*。
+
+有时候，一些书籍里为了方便会使用 $$ \begin{smallmatrix} something^+4 \end{smallmatrix} $$ 表示“一个或多个，但最多为4个的 something”。或使用 $$ \begin{smallmatrix} something^+, \end{smallmatrix} $$ 表示“一个或多个 *something*，它们被逗号分隔”。
+
+<center>
+$$ \begin{smallmatrix}
+书籍 & \to & \text{前言 } 章节^+ \text{ 结语}
+\end{smallmatrix} $$
+</center>
+
+是这个规则的缩写：
+
+<center>
+$$ \begin{smallmatrix}
+书籍    & \to & \text{前言  } \alpha \text{  结语} \\
+\alpha & \to & \text{章节 | 章节  } \alpha
+\end{smallmatrix} $$
+</center>
+
+它们也是下面这个“迭代”版本的缩写：
+
+<center>
+$$ \begin{smallmatrix}
+书籍 & \to   & \text{前言 章节 结语} \\
+    & |     & \text{前言 章节 章节 结语} \\
+    & |     & \text{前言 章节 章节 章节 结语} \\
+    & |     & \dots \\
+    & \dots &
+\end{smallmatrix} $$
+</center>
+
+当然，这种版本的表示有无穷多的规则。
