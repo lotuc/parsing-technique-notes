@@ -8,4 +8,5 @@
   * [语法和语言的 CHOMSKY 层级](./chap2/chomsky-hierarchy.md)
   * [VW 语法](./chap2/vw-grammars.md)
   * [Affix 语法](./chap2/affix-grammar.md)
+  * [总结](./chap2/summarize.md)
 * [引用](./reference/index.md)
