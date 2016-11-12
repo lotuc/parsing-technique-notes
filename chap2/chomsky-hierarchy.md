@@ -4,6 +4,7 @@
 
 其他级别的规则均是在该定义的规则上加上各种限制所成。
 
+
 # Type 1
 
 对于 *Type 0* 的语法来说，可以将任意数量（非零）的符号转换为任意数量（可能为零）的符号：
@@ -38,7 +39,7 @@ n个a & n个b & n个c
 
 *Type 2* 语法被称为上下文无关语法（context-free grammars, CF grammars），它和上下文相关语法的关系就和其名字指出的一样。上下文无关语法和上下文相关语法的区别是左侧符号转换到右侧时不需要考虑上下文。所以，其语法经常在其左侧只包含一个非终结符，例如：
 
-<center>
+<center id="sentence_rule">
 $$ \begin{smallmatrix}
 Sentence_S & \to & \text{Name | List and Name} \\
 Name       & \to & \text{tom | dick | harry} \\
@@ -135,3 +136,39 @@ $$ \begin{smallmatrix}
 </center>
 
 当然，这种版本的表示有无穷多的规则。
+
+
+# Type 3
+
+此级别的语法只能包含两种类型的规则：
+
+- 非终结符产生零或多个终结符
+- 非终结符产生零到多个终结符，后面跟着一个非终结符
+
+Chomsky 对于 Type 3 语法的原始定义中限制能包含的规则是：
+
+- 非终结符产生一个终结符
+- 非终结符产生一个终结符，后面跟着一个非终结符
+
+当然，这两种限制方式是等价的。Type 3 语法也被称为 *正则语法（regular grammar, RE grammar）*或*有限状态语法（finite-state grammar, FS grammar）*。正则语法常被用来描述文本的结构，这种应用场景中常把终结符定义为单个字符。我们还是使用 [sentence](#sentence_rule) 那个规则，将 *Tom*、*Dick*、*Harry*、*and* 分别计作 *t*、*d*、*h* 和 *&*：
+
+<center id="tdh&_rule"> \begin{smallmatrix}
+Sentence_S & \to & \text{t  | d | h | List} \\
+List       & \to & \text{t ListTail | d ListTail | h ListTail} \\
+ListTail   & \to & , List | &t | &d | &h
+\end{smallmatrix} </center>
+
+
+# Type 4
+
+这次我们给语法加上的限制就比较终极了：非终结符只能是我们给定那些；且规则的右侧不能含有非终结符。它的起始符（start symbol）可以从我们给定的范围内中去选择，这点反映在了其别称 *有限选择语法（finite-choice grammar, FC grammar）*。
+
+FC 语法并不属于“官方”的 Chomsky 层级。
+
+上面的 *tdh&* 规则是不可能被 FC 语法进行描述。如果我们限制列表（List）的长度，这样 FC 也是可以描述它的，因为我们可以穷举所有可能性：
+
+<center> \begin{smallmatrix}
+S_S & \to & \text{[tdh] | [tdh] & [tdh] | [tdh], [tdh] & [tdh]}
+\end{smallmatrix} </center>
+
+它包含 $$ 3+3*3+3*3*3=39 $$ 种生成规则。
