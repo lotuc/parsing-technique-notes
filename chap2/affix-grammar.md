@@ -13,15 +13,15 @@ text_S + N & :  & list + N + a, list + N + b, list + N + c.
 \end{smallmatrix} $$<br/><br/>
 
 $$ \begin{smallmatrix} 
-list + N + A  & :  & where is zero + N; \\
-              &    & letter + A, where is decreased + M + N, \\
-              &    & list + M + A. \\
-list + N + A  & :  & where is zero + N; \\
-              &    & letter + A, where is decreased + M + N, \\
-              &    & list + M + A. \\
-list + A  & :  & where is + A + a, a symbol; \\
-          &    & where is + A + b, b symbol; \\
-          &    & where is + A + c, c symbol. \\
+list + N + A  & :  & \text{where is zero + N;} \\
+              &    & \text{letter + A, where is decreased + M + N,} \\
+              &    & \text{list + M + A.} \\
+list + N + A  & :  & \text{where is zero + N;} \\
+              &    & \text{letter + A, where is decreased + M + N,} \\
+              &    & \text{list + M + A.} \\
+list + A  & :  & \text{where is + A + a, a symbol;} \\
+          &    & \text{where is + A + b, b symbol;} \\
+          &    & \text{where is + A + c, c symbol.} \\
 \text{where is zero + N}           & : & {N = 0}.\\
 \text{where is decreased + M + N}  & : & {M = N - 1}.\\
 \text{where is + A + B}            & : & {A = B}.
