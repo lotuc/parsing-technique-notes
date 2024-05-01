@@ -1,8 +1,6 @@
-(ns ch4.ch4-01-unger)
-
-(def grammar-4-1-1
-  {:start 'S
-   :rules {'S ['(A B C) '(D E) '(F)]}})
+(ns ch4.ch4-01-unger
+  (:require
+   [ch4.grammars :refer [grammar-4-1-1 grammar-4-fig-4-1 terminal?]]))
 
 (defn gen-partitions
   [cups marbles]
@@ -34,16 +32,10 @@
     (for [r (start rules)]
       (match-rule-right r "pqrs"))))
 
-(def grammar-4-fig-4-1
-  {:start 'Expr
-   :rules {'Expr   ['(Expr \+ Term) '(Term)]
-           'Term   ['(Term \* Factor) '(Factor)]
-           'Factor ['(\( Expr \)) '(\i)]}})
-
 (defn reject-on-terminal-mismatch [[_and & leaves]]
-  (some (fn [[grammar-id matched]]
-          (when-not (symbol? grammar-id)
-            (not= [grammar-id] matched)))
+  (some (fn [[alphabet matched]]
+          (when (terminal? alphabet)
+            (not= [alphabet] matched)))
         leaves))
 
 (defn match-rule-left [grammar [rule-left input]]
@@ -54,17 +46,17 @@
        seq))
 
 (defn- unger-no-epsilon-topdown
-  [grammar [grammar-id input]]
-  (if (symbol? grammar-id)
-    (when-some [ors (seq (for [i (match-rule-left grammar [grammar-id input])
+  [grammar [alphabet input]]
+  (if (terminal? alphabet)
+    [alphabet input]
+    (when-some [ors (seq (for [i (match-rule-left grammar [alphabet input])
                                :let [i-ands (map (partial unger-no-epsilon-topdown grammar)
                                                  (rest i))]
                                :when (every? identity i-ands)]
                            (into [:and] i-ands)))]
       (if (= 1 (count ors))
-        [grammar-id (first ors)]
-        [grammar-id (into [:or] ors)]))
-    [grammar-id input]))
+        [alphabet (first ors)]
+        [alphabet (into [:or] ors)]))))
 
 (defn unger-no-epsilon [grammar input]
   (letfn []
