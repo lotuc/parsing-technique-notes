@@ -25,6 +25,14 @@
             Sign     [(\+) (\-)]
             Empty    [(epsilon)]}})
 
+(def grammar-fig-4-10
+  {:start 'S
+   :rules '{S [(L \a M)]
+            L [(L M)
+               (epsilon)]
+            M [(M M)
+               (epsilon)]}})
+
 (def grammar-fig-4-15
   {:start 'Number
    :rules '{Number   [(\0) (\1) (\2) (\3) (\4) (\5) (\6) (\7) (\8) (\9)
