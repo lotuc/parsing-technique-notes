@@ -1,11 +1,14 @@
 (ns ch4.ch4-01-unger
   (:require
-   [ch4.grammars :refer [epsilon? grammar-4-fig-4-1 terminal-eq? terminal?]]
+   [ch4.grammars :refer [epsilon? grammar-4-fig-4-1 grammar-4-fig-4-3
+                         terminal-eq? terminal?]]
    [hyperfiddle.rcf :as rcf]))
 
+(def ^:dynamic *epsilon?* false)
+
 (defn gen-partitions
-  [n-cups n-marbles & {:keys [allow-empty?]}]
-  (let [i0 (if allow-empty? 0 1)]
+  [n-cups n-marbles]
+  (let [i0 (if *epsilon?* 0 1)]
     (letfn [(g [cups marbles]
               (let [n-marbles (count marbles)]
                 (loop [i i0 r []]
@@ -63,41 +66,61 @@
                     (seq matched)))
              pairs)))
 
-(defn match-non-terminal [grammar [non-terminal input] & {:keys [epsilon?]}]
+(defn match-non-terminal [rules [non-terminal input]]
   (let [accept? (if epsilon?
                   (fn [m]
                     (and (not (some-terminal-mismatch? m))
                          (not (some-epsilon-mismatch? m))))
                   (complement some-terminal-mismatch?))]
-    (->> (for [r (get-in grammar [:rules non-terminal])]
+    (->> (for [r (rules non-terminal)]
            (match-alpabets r input))
          (mapcat identity)
          (filter accept?)
          seq)))
 
-(defn- unger-no-epsilon-topdown
-  [grammar [alphabet input]]
-  (if (terminal? alphabet)
-    [alphabet input]
-    (when-some [ors (seq (for [[_ & pairs] (match-non-terminal grammar [alphabet input])
-                               :let [r (map (partial unger-no-epsilon-topdown grammar)
-                                            pairs)]
-                               :when (every? some? r)]
-                           (into [:and] r)))]
-      (if (= 1 (count ors))
-        [alphabet (first ors)]
-        [alphabet (into [:or] ors)]))))
+(defn unger-no-epsilon
+  [{:keys [start rules] :as grammar} input]
+  (letfn [(topdown [[alphabet input]]
+            (if (terminal? alphabet)
+              [alphabet input]
+              (when-some [ors (seq (for [[_ & pairs] (match-non-terminal rules [alphabet input])
+                                         :let [r (map topdown pairs)]
+                                         :when (every? some? r)]
+                                     (into [:and] r)))]
+                (if (= 1 (count ors))
+                  [alphabet (first ors)]
+                  [alphabet (into [:or] ors)]))))]
+    (binding [*epsilon?* false]
+      (topdown [start input]))))
 
-(defn unger-no-epsilon [grammar input]
-  (letfn []
-    (unger-no-epsilon-topdown grammar [(:start grammar) input])))
+(defn unger-epsilon-naive
+  [{:keys [start rules] :as grammar} input]
+  (letfn [(topdown [depth [alphabet input]]
+            (Thread/sleep 100)
+            (println (with-out-str
+                       (doseq [_ (range depth)] (print " "))
+                       (print alphabet input)))
+            (if (terminal? alphabet)
+              [alphabet input]
+              (when-some [ors (seq (for [[_ & pairs] (match-non-terminal rules [alphabet input])
+                                         :let [r (map (partial topdown (inc depth)) pairs)]
+                                         :when (every? some? r)]
+                                     (into [:and] r)))]
+                (if (= 1 (count ors))
+                  [alphabet (first ors)]
+                  [alphabet (into [:or] ors)]))))]
+    (binding [*epsilon?* true]
+      (topdown 0 [start input]))))
+
+(comment
+  (unger-epsilon-naive grammar-4-fig-4-3 "d"))
 
 (rcf/tests
  (gen-partitions 2 3)
  := [[[0] [1 2]]
      [[0 1] [2]]]
 
- (gen-partitions 2 3 :allow-empty? true)
+ (binding [*epsilon?* true] (gen-partitions 2 3))
  := [[[] [0 1 2]]
      [[0] [1 2]]
      [[0 1] [2]]
@@ -118,8 +141,8 @@
  (boolean (some-epsilon-mismatch? '[:and [A "p"] [epsilon "a"]])) := true)
 
 (rcf/tests
- (match-non-terminal '{:rules {Factor [(\i)]}} ['Factor "i"]) := '([:and [\i "i"]])
- (match-non-terminal '{:rules {Factor [(\i)]}} ['Factor "j"]) := nil)
+ (match-non-terminal '{Factor [(\i)]} ['Factor "i"]) := '([:and [\i "i"]])
+ (match-non-terminal '{Factor [(\i)]} ['Factor "j"]) := nil)
 
 (rcf/tests
  (unger-no-epsilon grammar-4-fig-4-1 "i")
@@ -148,7 +171,8 @@
              [\+ "+"]
              [Term [:and [Factor [:and [\i "i"]]]]]]]
            [\) ")"]]]]]]]
- (unger-no-epsilon grammar-4-fig-4-1 "(i+i)*i")
+ (unger-no-epsilon
+  grammar-4-fig-4-1 "(i+i)*i")
  := '[Expr
       [:and
        [Term

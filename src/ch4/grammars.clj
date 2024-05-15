@@ -14,10 +14,16 @@
   (and (= (count input) 1) (= terminal (first input))))
 
 (def grammar-4-fig-4-1
-  {:start 'Expr
-   :rules {'Expr   ['(Expr \+ Term) '(Term)]
-           'Term   ['(Term \* Factor) '(Factor)]
-           'Factor ['(\( Expr \)) '(\i)]}})
+  '{:start Expr
+    :rules {Expr   [(Expr \+ Term) (Term)]
+            Term   [(Term \* Factor) (Factor)]
+            Factor [(\( Expr \)) (\i)]}})
+
+(def grammar-4-fig-4-3
+  '{:start S
+    :rules {S [(L S D) (epsilon)]
+            L [(epsilon)]
+            D [(\d)]}})
 
 (def grammar-fig-4-6
   {:start 'Number
