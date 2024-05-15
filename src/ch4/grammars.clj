@@ -1,12 +1,17 @@
 (ns ch4.grammars)
 
-(defn epsilon? [alphabet] (= alphabet 'epsilon))
+(defn epsilon?
+  [alphabet]
+  (= alphabet 'epsilon))
 
-(defn terminal? [alphabet] (not (symbol? alphabet)))
+(defn terminal?
+  [alphabet]
+  (not (symbol? alphabet)))
 
-(def grammar-4-1-1
-  {:start 'S
-   :rules {'S ['(A B C) '(D E) '(F)]}})
+(defn terminal-eq?
+  "assume terminal be a `character` and input a `string`."
+  [terminal input]
+  (and (= (count input) 1) (= terminal (first input))))
 
 (def grammar-4-fig-4-1
   {:start 'Expr
