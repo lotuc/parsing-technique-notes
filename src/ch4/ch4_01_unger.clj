@@ -100,7 +100,7 @@
             (println (with-out-str
                        (doseq [_ (range depth)] (print " "))
                        (print alphabet input)))
-            (if (terminal? alphabet)
+            (if (or (terminal? alphabet) (epsilon? alphabet))
               [alphabet input]
               (when-some [ors (seq (for [[_ & pairs] (match-non-terminal rules [alphabet input])
                                          :let [r (map (partial topdown (inc depth)) pairs)]
@@ -113,7 +113,26 @@
       (topdown 0 [start input]))))
 
 (comment
+  ;; infinite loop
   (unger-epsilon-naive grammar-4-fig-4-3 "d"))
+
+(defn unger-epsilon
+  [{:keys [start rules] :as grammar} input]
+  (letfn [(topdown [!searching [alphabet input :as p]]
+            ;; cutoff on same question while topdown
+            (when-not (!searching p)
+              (if (or (terminal? alphabet) (epsilon? alphabet))
+                [alphabet input]
+                (when-some [ors (seq (for [[_ & pairs] (match-non-terminal rules [alphabet input])
+                                           :let [r (map (partial topdown (conj !searching p)) pairs)]
+                                           :when (every? some? r)]
+                                       (into [:and] r)))]
+                  (if (= 1 (count ors))
+                    [alphabet (first ors)]
+                    [alphabet (into [:or] ors)])))))]
+    (binding [*epsilon?* true]
+      (let [!searching #{}]
+        (topdown !searching [start input])))))
 
 (rcf/tests
  (gen-partitions 2 3)
@@ -190,3 +209,19 @@
              [\) ")"]]]]]
          [\* "*"]
          [Factor [:and [\i "i"]]]]]]])
+
+(rcf/tests
+ (unger-epsilon grammar-4-fig-4-3 "d")
+ := '[S [:and
+         [L [:and [epsilon ()]]]
+         [S [:and [epsilon ()]]]
+         [D [:and [\d "d"]]]]]
+ (unger-epsilon grammar-4-fig-4-3 "dd")
+ := '[S
+      [:and
+       [L [:and [epsilon ()]]]
+       [S [:and
+           [L [:and [epsilon ()]]]
+           [S [:and [epsilon ()]]]
+           [D [:and [\d "d"]]]]]
+       [D [:and [\d "d"]]]]])
