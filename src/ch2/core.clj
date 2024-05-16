@@ -35,8 +35,8 @@
 
 (defn remove-non-productive-rules
   [{:keys [rules] :as grammar}]
-  (let [productive-rules (find-productive-non-terminals grammar)
-        productive? (partial productive-rule? productive-rules)]
+  (let [non-terminals (find-productive-non-terminals grammar)
+        productive? (partial productive-rule? non-terminals)]
     (letfn [(keep-producive [[left rights]]
               (when (productive? left)
                 (let [rights' (filterv #(every? productive? %) rights)]
@@ -46,6 +46,32 @@
            (filter some?)
            (into {})
            (assoc grammar :rules)))))
+
+(defn find-rechable-non-terminals
+  [{:keys [rules start] :as grammar}]
+  (letfn [(inference [rechable]
+            (reduce
+             (fn [rechable-acc t]
+               (->> (rules t)
+                    flatten
+                    (filter (fn [v] (and (not (terminal? v))
+                                         (not (epsilon? v)))))
+                    (reduce conj rechable-acc)))
+             rechable
+             rechable))]
+    (loop [rechable #{start}]
+      (let [rechable' (inference rechable)]
+        (if (= rechable rechable')
+          rechable
+          (recur rechable'))))))
+
+(defn remove-non-rechable-rules
+  [{:keys [rules] :as grammar}]
+  (let [rechable (find-rechable-non-terminals grammar)]
+    (->> rules
+         (filter (comp rechable first))
+         (into {})
+         (assoc grammar :rules))))
 
 (rcf/tests
  (find-productive-non-terminals grammar-fig-2-27)
@@ -57,4 +83,13 @@
               A [(\a)]
               B [(\b C)]
               C [(\c)]
-              E [(\e)]}})
+              E [(\e)]}}
+
+ (-> grammar-fig-2-27
+     (remove-non-productive-rules)
+     (remove-non-rechable-rules))
+ := '{:start S
+      :rules {S [(A B)]
+              A [(\a)]
+              B [(\b C)]
+              C [(\c)]}})
