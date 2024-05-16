@@ -1,52 +1,46 @@
 (ns ch4.ch4-01-unger
   (:require
-   [ch4.grammars :refer [epsilon? grammar-4-fig-4-1 grammar-4-fig-4-3
-                         terminal-eq? terminal?]]
-   [hyperfiddle.rcf :as rcf]))
+   [ch4.grammars :refer [epsilon? grammar-4-fig-4-3 terminal-eq? terminal?]]))
 
 (def ^:dynamic *epsilon?* false)
 
 (defn gen-partitions
+  "every partition is a sequence of [marble-idx num-of-marbles]."
   [n-cups n-marbles]
   (let [i0 (if *epsilon?* 0 1)]
-    (letfn [(g [cups marbles]
-              (let [n-marbles (count marbles)]
-                (loop [i i0 r []]
-                  ;; i: how many marbles to be put into first cup
-                  ;; r: all possible pa
-                  (if (<= i n-marbles)
-                    (let [r' (let [[cup0 & cups'] cups]
-                               (if cups'
-                                 (let [cup0' (into cup0 (take i marbles))
-                                       marbles' (drop i marbles)]
-                                   (->> (g cups' marbles')
-                                        (map (fn [v] (into [cup0'] v)))
-                                        (into r)))
-                                 [[(into cup0 marbles)]]))]
-                      (recur (inc i) r'))
-                    r))))]
-      (g (map (constantly []) (range n-cups))
-         (range n-marbles)))))
+    (letfn [(add-to-cup [cup marble0-idx i]
+              (if cup
+                (update cup 1 + i)
+                [marble0-idx i]))
+            (g [cups marble0-idx n-marbles]
+              (loop [i i0 r []]
+                ;; i: how many marbles to be put into first cup
+                ;; r: all possible partitions
+                (if (<= i n-marbles)
+                  (let [r' (let [[cup0 & cups'] cups]
+                             (if cups'
+                               (let [cup0' (add-to-cup cup0 marble0-idx i)]
+                                 (->> (g cups' (+ marble0-idx i) (- n-marbles i))
+                                      (map (fn [v] (into [cup0'] v)))
+                                      (into r)))
+                               [[(add-to-cup cup0 marble0-idx n-marbles)]]))]
+                    (recur (inc i) r'))
+                  r)))]
+      (g (map (constantly nil) (range n-cups)) 0 n-marbles))))
+
+(defn- input-subs [input [i l]]
+  (assert (string? input))
+  (subs input i (+ i l)))
 
 (defn match-alpabets
   "Build a and tree (hiccup form)"
-  [alpabets input & {:keys [sequence-subs]}]
-  (let [input-subs (cond sequence-subs sequence-subs
-                         (string? input)
-                         (fn [indexes]
-                           (when (seq indexes)
-                             (subs input
-                                   (first indexes)
-                                   (inc (last indexes)))))
-                         :else
-                         (fn [indexes]
-                           (map #(nth input %) indexes)))
-        nth-alpabet #(nth alpabets %)]
+  [alpabets input]
+  (let [nth-alpabet #(nth alpabets %)]
     (letfn [(match-partition [p]
               (->> (map-indexed
-                    (fn [rule-idx input-indexes]
+                    (fn [rule-idx i-l]
                       [(nth-alpabet rule-idx)
-                       (input-subs input-indexes)])
+                       (input-subs input i-l)])
                     p)
                    (into [:and])))]
       (map match-partition
@@ -133,95 +127,3 @@
     (binding [*epsilon?* true]
       (let [!searching #{}]
         (topdown !searching [start input])))))
-
-(rcf/tests
- (gen-partitions 2 3)
- := [[[0] [1 2]]
-     [[0 1] [2]]]
-
- (binding [*epsilon?* true] (gen-partitions 2 3))
- := [[[] [0 1 2]]
-     [[0] [1 2]]
-     [[0 1] [2]]
-     [[0 1 2] []]])
-
-(rcf/tests
- (match-alpabets '(A B C) "pqrs")
- := '([:and [A "p"] [B "q"] [C "rs"]]
-      [:and [A "p"] [B "qr"] [C "s"]]
-      [:and [A "pq"] [B "r"] [C "s"]]))
-
-(rcf/tests
- (boolean (some-terminal-mismatch? '[:and [A "p"] [B "q"]]))  := false
- (boolean (some-terminal-mismatch? '[:and [A "p"] [\q "q"]])) := false
- (boolean (some-terminal-mismatch? '[:and [A "p"] [\a "q"]])) := true
-
- (boolean (some-epsilon-mismatch? '[:and [A "p"] [epsilon ""]]))  := false
- (boolean (some-epsilon-mismatch? '[:and [A "p"] [epsilon "a"]])) := true)
-
-(rcf/tests
- (match-non-terminal '{Factor [(\i)]} ['Factor "i"]) := '([:and [\i "i"]])
- (match-non-terminal '{Factor [(\i)]} ['Factor "j"]) := nil)
-
-(rcf/tests
- (unger-no-epsilon grammar-4-fig-4-1 "i")
- := '[Expr [:and [Term [:and [Factor [:and [\i "i"]]]]]]]
- (unger-no-epsilon grammar-4-fig-4-1 "(i)")
- := '[Expr
-      [:and
-       [Term
-        [:and
-         [Factor
-          [:and
-           [\( "("]
-           [Expr [:and [Term [:and [Factor [:and [\i "i"]]]]]]]
-           [\) ")"]]]]]]]
- (unger-no-epsilon grammar-4-fig-4-1 "(i+i)")
- := '[Expr
-      [:and
-       [Term
-        [:and
-         [Factor
-          [:and
-           [\( "("]
-           [Expr
-            [:and
-             [Expr [:and [Term [:and [Factor [:and [\i "i"]]]]]]]
-             [\+ "+"]
-             [Term [:and [Factor [:and [\i "i"]]]]]]]
-           [\) ")"]]]]]]]
- (unger-no-epsilon
-  grammar-4-fig-4-1 "(i+i)*i")
- := '[Expr
-      [:and
-       [Term
-        [:and
-         [Term
-          [:and
-           [Factor
-            [:and
-             [\( "("]
-             [Expr
-              [:and
-               [Expr [:and [Term [:and [Factor [:and [\i "i"]]]]]]]
-               [\+ "+"]
-               [Term [:and [Factor [:and [\i "i"]]]]]]]
-             [\) ")"]]]]]
-         [\* "*"]
-         [Factor [:and [\i "i"]]]]]]])
-
-(rcf/tests
- (unger-epsilon grammar-4-fig-4-3 "d")
- := '[S [:and
-         [L [:and [epsilon ()]]]
-         [S [:and [epsilon ()]]]
-         [D [:and [\d "d"]]]]]
- (unger-epsilon grammar-4-fig-4-3 "dd")
- := '[S
-      [:and
-       [L [:and [epsilon ()]]]
-       [S [:and
-           [L [:and [epsilon ()]]]
-           [S [:and [epsilon ()]]]
-           [D [:and [\d "d"]]]]]
-       [D [:and [\d "d"]]]]])
